@@ -14,7 +14,10 @@ class FormController extends Controller
         $categories = $this->loadCategories();
         return response()->json(['data' => [
             'name' => User::first()->name,
-            'categories' => $categories
+            'categories' => $categories,
+            'category_dom' => collect(Category::get())->map(function ($item) {
+                return trim($item->option);
+            })->toArray()
         ]]);
     }
 
@@ -22,19 +25,11 @@ class FormController extends Controller
         $user = User::first();
         if (!$user) $user = $this->createUser();
         $user_categories = explode(",", trim($user->categories));
-        $categories = collect(Category::get())->map(function ($item) use ($user_categories) {
-            $option = $this->checkSelection($user_categories, $item->option);
-            return trim($option);
-        })->toArray();
-        return $categories;
-    }
-
-    public function checkSelection($user_categories, $option) {
-        $value = $option;
-        foreach($user_categories as $user_cat) {
-            if (str_contains($option, 'value="'.$user_cat.'"')) $value = substr_replace(trim($option), "selected ", 8, 0);
-        }
-        return $value;
+        // $categories = collect(Category::get())->map(function ($item) use ($user_categories) {
+        //     $option = $this->checkSelection($user_categories, $item->option);
+        //     return trim($option);
+        // })->toArray();
+        return $user_categories;
     }
 
     public function createUser() {
@@ -59,7 +54,7 @@ class FormController extends Controller
         return response()->json(['data' => [
             'message' => "saved",
             'name' => $user->name,
-            'categories' => $this->loadCategories()
+            'categories' => $this->loadCategories(),
         ]]);
     }
 }
